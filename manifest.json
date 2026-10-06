@@ -1,0 +1,115 @@
+{
+  "manifest_version": 3,
+  "name": "Claude in Chrome for Gateway",
+  "version": "1.0.94",
+  "description": "Claude in Chrome 网关增强版：去除 Claude 账号绑定限制，直接支持自定义 API 网关与第三方模型（兼容 Claude 3.7 / Opus 5.5 推理努力程度），内置历史会话、全局网页免确认授权及完整简体中文界面，彻底移除 Anthropic 遥测。",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "128": "icon-128.png"
+  },
+  "background": {
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open Claude"
+  },
+  "options_page": "options.html",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "activeTab",
+    "scripting",
+    "debugger",
+    "tabGroups",
+    "tabs",
+    "alarms",
+    "notifications",
+    "webNavigation",
+    "declarativeNetRequestWithHostAccess",
+    "offscreen",
+    "nativeMessaging",
+    "unlimitedStorage",
+    "downloads",
+    "identity"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "storage": {
+    "managed_schema": "managed_schema.json"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "assets/content-script.ts-loader-Dd0kPPVP.js"
+      ],
+      "matches": [
+        "https://claude.ai/*",
+        "https://*.claude.ai/*"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "js": [
+        "assets/accessibility-tree.js-B-oUarrX.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "js": [
+        "assets/agent-visual-indicator.js-CwioqiOd.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://claude.ai/*",
+      "https://*.claude.ai/*"
+    ]
+  },
+  "commands": {
+    "toggle-side-panel": {
+      "suggested_key": {
+        "default": "Ctrl+E",
+        "mac": "Command+E"
+      },
+      "description": "Toggle Claude side panel"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https: wss: http:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+  },
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "https://*.claude.ai/*",
+        "https://claude.ai/*"
+      ],
+      "resources": [
+        "assets/onboarding-prompts-CJtFEMjA.js",
+        "assets/content-script.ts-D0rMrCjG.js"
+      ],
+      "use_dynamic_url": false
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "resources": [
+        "assets/accessibility-tree.js-B-oUarrX.js",
+        "assets/agent-visual-indicator.js-CwioqiOd.js"
+      ],
+      "use_dynamic_url": false
+    }
+  ]
+}

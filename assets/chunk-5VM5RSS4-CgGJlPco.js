@@ -1,0 +1,1 @@
+import{n}from"./chunk-Y2CYZVJY-DyW28Zxd.js";var e=n(()=>"\n  /* Font Awesome icon styling - consolidated */\n  .label-icon {\n    display: inline-block;\n    height: 1em;\n    overflow: visible;\n    vertical-align: -0.125em;\n  }\n  \n  .node .label-icon path {\n    fill: currentColor;\n    stroke: revert;\n    stroke-width: revert;\n  }\n","getIconStyles");export{e as t};

@@ -1,0 +1,1 @@
+function t(t){return t.toLowerCase().replace(/[\s_]+/g,"-").replace(/[^a-z0-9-]/g,"").replace(/-+/g,"-").replace(/^-|-$/g,"")||"shortcut"}function e(t,e=60){const r="string"==typeof t?t:"";for(const n of r.split(/\r?\n/)){const t=n.trim();if(t)return t.length>e?t.slice(0,e):t}return""}export{t as n,e as t};

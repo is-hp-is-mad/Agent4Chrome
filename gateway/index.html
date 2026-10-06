@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude in Chrome for Gateway · 网关与模型配置</title>
+    <link rel="icon" type="image/png" href="/icon-128.png" />
+    <link rel="stylesheet" href="gateway.css" />
+    <script src="/gateway/shim.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <img src="/icon-128.png" alt="" class="logo" />
+        <div>
+          <h1>Claude in Chrome for Gateway</h1>
+          <p class="sub">自定义 API 网关 · 自定义模型 · 历史会话 · 遥测已脱敏</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span id="statusBadge" class="badge badge-off">未配置</span>
+        <a href="/options.html#permissions" class="link" target="_blank">原生设置 ↗</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- 选项卡导航 -->
+      <nav class="nav-tabs" id="navTabs">
+        <button type="button" class="tab-btn active" data-tab="tab-gateway">网关与连接</button>
+        <button type="button" class="tab-btn" data-tab="tab-models">自定义模型</button>
+        <button type="button" class="tab-btn" data-tab="tab-history">历史会话</button>
+        <button type="button" class="tab-btn" data-tab="tab-advanced">高级与日志</button>
+      </nav>
+
+      <!-- ================= 选项卡 1：网关与连接 ================= -->
+      <div id="tab-gateway" class="tab-pane">
+        <section class="card" id="loginCard">
+          <h2>网关登录与认证</h2>
+          <p class="hint">填写兼容 Anthropic Messages API（<code>/v1/messages</code>）的网关地址与 Key。保存登录后，侧边栏会自动使用此网关进行交互。</p>
+
+          <div class="grid">
+            <label class="field span2">
+              <span>网关地址（Base URL）</span>
+              <input id="baseUrl" type="text" placeholder="https://gw.example.com 或 http://127.0.0.1:8080" autocomplete="off" />
+              <small>支持结尾带或不带 <code>/v1</code>；支持本地代理与局域网网关</small>
+            </label>
+
+            <label class="field span2">
+              <span>API Key</span>
+              <span class="row">
+                <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" />
+                <button type="button" id="toggleKey" class="btn ghost sm">显示</button>
+              </span>
+            </label>
+
+            <label class="field">
+              <span>认证方式</span>
+              <select id="authType">
+                <option value="x-api-key">x-api-key（Anthropic 风格）</option>
+                <option value="bearer">Authorization: Bearer（OpenAI 风格）</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>anthropic-version</span>
+              <input id="anthropicVersion" type="text" value="2023-06-01" />
+            </label>
+
+            <label class="field">
+              <span>未知模型处理</span>
+              <select id="unknownModelPolicy">
+                <option value="map-default">映射为默认模型</option>
+                <option value="passthrough">原样透传给网关</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>网关不支持流式（SSE）时自动转换</span>
+              <span class="checkline">
+                <input id="gatewayNoStream" type="checkbox" />
+                <small>转为非流式后将响应还原为 SSE 流</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="testBtn" class="btn ghost">测试连接</button>
+            <button id="saveBtn" class="btn primary">保存并登录</button>
+            <button id="logoutBtn" class="btn danger ghost">退出登录</button>
+            <span id="loginMsg" class="msg"></span>
+          </div>
+          <div id="modelListRemote" class="remote-models hidden"></div>
+        </section>
+      </div>
+
+      <!-- ================= 选项卡 2：自定义模型 ================= -->
+      <div id="tab-models" class="tab-pane hidden">
+        <section class="card">
+          <h2>自定义模型与推理控制</h2>
+          <p class="hint">配置模型 ID、推理参数及多模态能力开关。配置的模型将直接呈现在侧边栏的模型选择器中。</p>
+
+          <div class="toolbar">
+            <button id="addModelBtn" class="btn primary">＋ 添加模型</button>
+            <button id="listModelsBtn" class="btn ghost">从网关拉取模型</button>
+            <span class="spacer"></span>
+            <label class="inline">
+              默认模型
+              <select id="defaultModelSel"></select>
+            </label>
+            <label class="inline">
+              快速辅助模型
+              <select id="fastModelSel"></select>
+            </label>
+          </div>
+
+          <div id="modelList" class="model-list"></div>
+
+          <!-- 模型编辑器 -->
+          <div id="modelEditor" class="editor hidden">
+            <h3 id="editorTitle">添加模型</h3>
+            <div class="grid">
+              <label class="field">
+                <span>模型 ID（原样发给 API）*</span>
+                <input id="m_id" type="text" placeholder="claude-3-7-sonnet-20250219 / gpt-4o / ..." />
+              </label>
+              <label class="field">
+                <span>API 实际模型名（可选映射）</span>
+                <input id="m_apiModel" type="text" placeholder="留空则与模型 ID 相同" />
+              </label>
+              <label class="field">
+                <span>显示名称</span>
+                <input id="m_name" type="text" placeholder="侧边栏选择器显示名称" />
+              </label>
+              <label class="field">
+                <span>知识截止（可选）</span>
+                <input id="m_knowledgeCutoff" type="text" placeholder="2025-01" />
+              </label>
+              <label class="field span2">
+                <span>描述（可选）</span>
+                <input id="m_description" type="text" placeholder="模型简要说明" />
+              </label>
+            </div>
+
+            <h4>推理参数（留空 = 保持请求默认）</h4>
+            <div class="grid">
+              <label class="field"><span>temperature</span><input id="m_temperature" type="number" step="0.1" min="0" max="2" placeholder="留空" /></label>
+              <label class="field"><span>top_p</span><input id="m_top_p" type="number" step="0.05" min="0" max="1" placeholder="留空" /></label>
+              <label class="field"><span>top_k</span><input id="m_top_k" type="number" step="1" min="0" placeholder="留空" /></label>
+              <label class="field"><span>max_tokens 上限</span><input id="m_max_output_tokens" type="number" step="1" min="1" placeholder="留空" /></label>
+              <label class="field span2">
+                <span>stop_sequences（逗号或换行分隔，可留空）</span>
+                <textarea id="m_stop_sequences" rows="2" placeholder="END, ###"></textarea>
+              </label>
+              <label class="field">
+                <span>思考能力（thinking）</span>
+                <select id="m_thinking">
+                  <option value="off">关闭</option>
+                  <option value="budget">固定预算（budget_tokens）</option>
+                  <option value="effort">努力程度（adaptive effort）</option>
+                </select>
+              </label>
+              <label class="field" id="thinkingBudgetField">
+                <span>thinking budget_tokens</span>
+                <input id="m_thinking_budget" type="number" step="1" min="1024" placeholder="2048" />
+              </label>
+              <label class="field" id="thinkingEffortField">
+                <span>thinking effort（推理努力程度）</span>
+                <div class="row">
+                  <select id="m_thinking_effort_preset">
+                    <option value="low">low - 轻量快速（简单问答与查询）</option>
+                    <option value="medium" selected>medium - 均衡推荐（Opus 5.5 / 3.7 默认甜点）</option>
+                    <option value="high">high - 深度推理（代码开发、多步分析）</option>
+                    <option value="xhigh">xhigh - 超强深度（高难度复杂问题）</option>
+                    <option value="max">max - 极限思考（穷尽验证与极深分析）</option>
+                    <option value="custom">自定义输入...</option>
+                  </select>
+                  <input id="m_thinking_effort" type="text" placeholder="努力程度值" value="medium" />
+                </div>
+                <small>可快速选择预设，也可在输入框中自由填写任意自定义值</small>
+              </label>
+              <label class="field span2">
+                <span>系统提示词附加内容（可选追加）</span>
+                <textarea id="m_systemAppend" rows="2" placeholder="追加在系统提示词末尾的指令…"></textarea>
+              </label>
+              <label class="field span2">
+                <span>附加请求体参数（JSON，覆盖/新增参数）</span>
+                <textarea id="m_extra" rows="2" placeholder="{}"></textarea>
+              </label>
+            </div>
+
+            <h4>模态支持（不支持的内容将从请求中过滤并替换为占位符）</h4>
+            <div class="modalities">
+              <label class="checkline"><input id="m_mod_vision" type="checkbox" checked /><span>视觉（图片 / 截图）</span></label>
+              <label class="checkline"><input id="m_mod_documents" type="checkbox" checked /><span>文件（PDF / 文档）</span></label>
+              <label class="checkline"><input id="m_mod_tools" type="checkbox" checked /><span>工具调用（浏览器自动化必需）</span></label>
+              <label class="checkline"><input id="m_mod_thinking" type="checkbox" checked /><span>思考块（thinking）</span></label>
+              <label class="checkline"><input id="m_mod_caching" type="checkbox" checked /><span>提示缓存（cache_control）</span></label>
+            </div>
+
+            <div class="actions">
+              <button id="modelSaveBtn" class="btn primary">保存模型</button>
+              <button id="modelCancelBtn" class="btn ghost">取消</button>
+              <span id="modelMsg" class="msg"></span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= 选项卡 3：历史会话 ================= -->
+      <div id="tab-history" class="tab-pane hidden">
+        <section class="card">
+          <div class="row-between">
+            <h2>历史会话记录</h2>
+            <div class="history-actions">
+              <input id="historySearch" type="text" class="sm-input" placeholder="搜索会话..." />
+              <button id="exportHistoryBtn" class="btn ghost sm">导出全部 (JSON)</button>
+              <button id="clearHistoryBtn" class="btn danger ghost sm">清空历史</button>
+            </div>
+          </div>
+          <p class="hint">在侧边栏与 Claude 的交互会话会自动保存在本地存储中，便于随时复查、导出或追溯。</p>
+          <div id="historyList" class="history-list"></div>
+          <div id="historyViewer" class="history-viewer hidden">
+            <div class="row-between viewer-header">
+              <h3 id="viewerTitle">会话详情</h3>
+              <div class="actions-sm">
+                <button id="restoreHistoryBtn" class="btn primary sm">恢复到侧边栏</button>
+                <button id="copyHistoryBtn" class="btn ghost sm">复制 Markdown</button>
+                <button id="closeViewerBtn" class="btn ghost sm">关闭详情</button>
+              </div>
+            </div>
+            <div id="viewerMessages" class="viewer-messages"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= 选项卡 4：高级与日志 ================= -->
+      <div id="tab-advanced" class="tab-pane hidden">
+        <section class="card">
+          <h2>全局网站权限（直接允许所有网站）</h2>
+          <p class="hint">默认情况下 Claude 会针对每个新域名弹出操作确认授权。开启此项后，将全局自动放行所有网站的操作请求，无需逐站确认。</p>
+          <div class="checkline" style="margin-top: 10px;">
+            <input id="allowAllSitesCheckbox" type="checkbox" />
+            <label for="allowAllSitesCheckbox" style="cursor: pointer; font-weight: 500;">直接允许所有网站（跳过权限确认弹窗）</label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>系统提示词与请求头</h2>
+          <div class="grid">
+            <label class="field span2">
+              <span>系统提示词（留空使用内置默认智能体指令）</span>
+              <textarea id="systemPrompt" rows="4" placeholder="留空 = 内置默认（完整浏览器智能体指令）"></textarea>
+            </label>
+            <label class="field span2">
+              <span>附加请求头（JSON，可留空）</span>
+              <textarea id="extraHeaders" rows="2" placeholder='{"X-Custom-Header": "value"}'></textarea>
+            </label>
+            <label class="field span2">
+              <span>附加 anthropic-beta（逗号分隔，可留空）</span>
+              <input id="betas" type="text" placeholder="e.g. pdfs-2024-09-25" />
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>配置导入与导出</h2>
+          <div class="actions">
+            <button id="exportBtn" class="btn ghost">导出配置 JSON</button>
+            <label class="btn ghost filebtn">导入配置 JSON<input id="importInput" type="file" accept="application/json" hidden /></label>
+            <button id="resetBtn" class="btn danger ghost">恢复默认（清空全部配置）</button>
+            <span id="cfgMsg" class="msg"></span>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>运行状态与请求日志</h2>
+          <p class="hint small" id="shimStatus">检查状态中…</p>
+          <div id="diagList" class="diag-list"></div>
+          <div class="actions">
+            <button id="diagRefreshBtn" class="btn ghost">刷新日志</button>
+            <button id="diagClearBtn" class="btn danger ghost">清空日志记录</button>
+            <button id="diagReloadBtn" class="btn ghost">重载扩展</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      Claude in Chrome for Gateway · 感谢 <a href="https://linux.do" target="_blank" style="color:inherit;text-decoration:underline;">linux.do</a> 社区
+    </footer>
+
+    <script src="gateway.js"></script>
+  </body>
+</html>

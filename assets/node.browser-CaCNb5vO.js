@@ -1,0 +1,1 @@
+import{a as e}from"./error-LUoBglO0.js";function t(t){return new Proxy({},{get(o,r){if("symbol"!=typeof r)throw new e(`\`${t}.${r}\` is not available in this environment; it needs a Node.js-compatible runtime`)}})}t("child_process"),t("crypto");var o=t("fs"),r=(t("os"),t("path"));t("stream"),t("util");export{o as fs,r as path};
