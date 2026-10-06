@@ -104,6 +104,14 @@ claude-in-chrome-for-gateway/
 
 ---
 
+## 🔗 与 Claude Desktop / Cowork 本地生态联动
+
+本插件既可作为一个完全独立的侧边栏 AI 浏览器助手使用，也可与桌面端 **[chat2work (Cowork MCP)](https://github.com/is-hp-is-mad/chat2work)** 原生协同工作：
+- **双轨自动化**：通过 Windows 原生 Native Messaging Host 通道，将浏览器的 DOM 语义树导航与高分辨率网页截屏以低延迟流式送入桌面端 Claude Desktop。
+- **完全解绑**：即便使用 Claude Desktop 免费账号，也能无缝驱使浏览器完成复杂的网页跨标签页长任务。
+
+---
+
 ## 🙏 致谢与声明
 
 - 感谢 **[LINUX DO 社区](https://linux.do)** 提供的高质量技术土壤与灵感分享！
