@@ -47,9 +47,9 @@
 ### 步骤 1：下载扩展文件
 直接克隆或下载本仓库到本地任意目录：
 ```bash
-git clone https://github.com/your-username/claude-in-chrome-for-gateway.git
+git clone https://github.com/is-hp-is-mad/Agent4Chrome.git
 ```
-或直接点击 GitHub 的 **Code -> Download ZIP** 并解压。
+或直接点击 GitHub 的 **Code -> Download ZIP** 下载并解压。
 
 ### 步骤 2：加载到 Chrome 浏览器
 1. 打开 Google Chrome 或基于 Chromium 的浏览器（Edge、Brave 等）。
