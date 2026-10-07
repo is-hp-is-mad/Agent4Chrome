@@ -1046,6 +1046,23 @@
     recordDiag("info", "shim loaded (" + BUILD_TAG + ")", "");
   } catch (e) {}
 
+  /* ====================== Native Messaging 通道保活心跳 ====================== */
+  try {
+    if (typeof ServiceWorkerGlobalScope !== "undefined" && typeof chrome !== "undefined" && chrome.alarms) {
+      var KEEPALIVE_ALARM = "gateway-native-keepalive";
+      chrome.alarms.get(KEEPALIVE_ALARM, function (alarm) {
+        if (!alarm) {
+          chrome.alarms.create(KEEPALIVE_ALARM, { periodInMinutes: 0.5 });
+        }
+      });
+      chrome.alarms.onAlarm.addListener(function (alarm) {
+        if (alarm && alarm.name === KEEPALIVE_ALARM) {
+          log("keepalive heartbeat triggered");
+        }
+      });
+    }
+  } catch (e) {}
+
   /* ============================ 启动 ============================ */
 
   syncAuthState();
